@@ -12,16 +12,17 @@ function parsepath(data) {
 
 	var lines = data.split(/[\r\n|\n]/);
 	lines.forEach(function(line){
-		var op, args = [];
-		line.split('#')[0].trim().split(' ').forEach(function(word,idx){var idx = 0;
+		line = line.trim();
+		var op, args = []; if ((line.length < 1) || (line[0] === '#')) return;
+		line.split('#')[0].trim().split(' ').forEach(function(word,idx){
 			if (idx === 0) op = word;
 			else {
-				var exp = (word[0] === '(') && (word[word.length-1] === ')');
-				if (exp) word = word.slice(1,-1);
-				args.push([exp, word]);
+				var exp = [!(/[0-9]/.test(word[0])), ((word[0] === '(') && (word[word.length-1] === ')'))];
+				if (exp[1]) word = word.slice(1,-1);
+				args.push([exp[0]||exp[1], word]);
 			};
 		});
-		if (!(op in ops)) ReferenceError(`Undefined operator: ${o}`);
+		if (!(op in ops)) ReferenceError(`Undefined operator: ${op}`);
 		args = args.map(function(arg){
 			if (!arg[0]) return arg[1];
 			else {

@@ -1,5 +1,15 @@
+const ops: {
+	"move": function(path, args) { path.moveTo(args[0], args[1]); },
+	"line": function(path, args) { path.lineTo(args[0], args[1]); },
+	"arc": function(path, args) { path.arc(args[0], args[1], args[2], args[3], args[4], false); },
+	"ctarc": function(path, args) { path.arc(args[0], args[1], args[2], args[3], args[4], true); },
+	"PI": function() {return Math.PI; }
+}
+
 function parsepath(data) {
-	// @TODO
+	var path = (typeof window !== 'undefined') ? new Path2D() : null;
+	if (!path) throw new TypeError('Nodejs is unsupported for now!');
+	return path;
 }
 
 function open(filename) {

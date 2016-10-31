@@ -1,4 +1,4 @@
-const ops: {
+const ops = {
 	"move": function(path, args) { path.moveTo(args[0], args[1]); },
 	"line": function(path, args) { path.lineTo(args[0], args[1]); },
 	"arc": function(path, args) { path.arc(args[0], args[1], args[2], args[3], args[4], false); },

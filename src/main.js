@@ -3,7 +3,8 @@ const ops = {
 	"line": function(path, args) { path.lineTo(args[0], args[1]); },
 	"arc": function(path, args) { path.arc(args[0], args[1], args[2], args[3], args[4], false); },
 	"ctarc": function(path, args) { path.arc(args[0], args[1], args[2], args[3], args[4], true); },
-	"PI": function() { return Math.PI; }
+	"PI": function() { return Math.PI; },
+	"degress": function() { return Math.PI / 180; }
 }
 
 function parsepath(data) {

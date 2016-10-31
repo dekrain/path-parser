@@ -3,12 +3,53 @@ const ops: {
 	"line": function(path, args) { path.lineTo(args[0], args[1]); },
 	"arc": function(path, args) { path.arc(args[0], args[1], args[2], args[3], args[4], false); },
 	"ctarc": function(path, args) { path.arc(args[0], args[1], args[2], args[3], args[4], true); },
-	"PI": function() {return Math.PI; }
+	"PI": function() { return Math.PI; }
 }
 
 function parsepath(data) {
 	var path = (typeof window !== 'undefined') ? new Path2D() : null;
 	if (!path) throw new TypeError('Nodejs is unsupported for now!');
+
+	var lines = data.split(/[\r\n|\n]/);
+	lines.forEach(function(line){
+		var op, args = [];
+		line.split('#')[0].trim().split(' ').forEach(function(word,idx){var idx = 0;
+			if (idx === 0) op = word;
+			else {
+				var exp = (word[0] === '(') && (word[word.length-1] === ')');
+				if (exp) word = word.slice(1,-1);
+				args.push([exp, word]);
+			};
+		});
+		if (!(op in ops)) ReferenceError(`Undefined operator: ${o}`);
+		args = args.map(function(arg){
+			if (!arg[0]) return arg[1];
+			else {
+				var result = 0, parts, co;
+				parts = arg[1].split(/[+|-|*|/|%]/).map(function(o){
+					if (/[0-9]/.test(o[0])) return o;
+					else if (o in ops) return ops[o](path, []);
+					else throw new ReferenceError(`Undefined operator: ${o}`);
+				});
+				arg[1].split('').filter(function(o){return '+-*/%'.split('').indexOf(o) > -1;}).forEach(function(o,i){
+					parts.splice(i*2+1,0,o);
+				});
+				parts.forEach(function(v,i){
+					if (i === 0) result = v;
+					else if (i%2 === 1) co = v;
+					else result =
+						(co === '+') ? result + v :
+						(co === '-') ? result - v :
+						(co === '*') ? result * v :
+						(co === '/') ? result / v :
+						(co === '%') ? result % v :
+						result; // For other checks
+				});
+				return result;
+			}
+		});
+		return ops[op](path, args);
+	});
 	return path;
 }
 

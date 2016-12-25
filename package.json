@@ -1,0 +1,26 @@
+{
+  "name": "path-parser",
+  "version": "1.0.0",
+  "description": "A parser for HTML5 Path2D Canvas object",
+  "main": "src/main.js",
+  "directories": {
+    "example": "examples"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "babel-cli": "^6.18.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dekrain/path-parser.git"
+  },
+  "author": "DeKrain",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/dekrain/path-parser/issues"
+  },
+  "homepage": "https://github.com/dekrain/path-parser#readme"
+}

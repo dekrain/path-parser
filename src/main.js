@@ -1,11 +1,12 @@
-const ops = {
+(function() {
+var ops = {
 	"move": function(path, args) { path.moveTo(args[0], args[1]); },
 	"line": function(path, args) { path.lineTo(args[0], args[1]); },
 	"arc": function(path, args) { path.arc(args[0], args[1], args[2], args[3], args[4], false); },
 	"ctarc": function(path, args) { path.arc(args[0], args[1], args[2], args[3], args[4], true); },
 	"PI": function() { return Math.PI; },
 	"degress": function() { return Math.PI / 180; }
-}
+};
 
 function parsepath(data) {
 	var path = (typeof window !== 'undefined') ? new Path2D() : null;
@@ -58,7 +59,7 @@ function parsepath(data) {
 function open(filename) {
 	var data = require('fs').readFileSync(filename, {encoding: 'UTF-8'});
 	return parsepath(data);
-};
+}
 
 if (typeof module !== 'undefined') {
 	parsepath.open = open;
@@ -66,3 +67,5 @@ if (typeof module !== 'undefined') {
 } else if (typeof window !== 'undefined') {
 	window.Path2DParser = parsepath; // Open method is only for nodejs module
 }
+
+})();

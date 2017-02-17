@@ -1,10 +1,11 @@
 # Thanks for the code for Mozilla Developer Network: https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Drawing_shapes
 # Stroke this
+# WARNING: Version for token-based parser!
 
-ctarc 75 65 50 0 (PI*2) # Counter Clockwise Arc
+ctarc 75 65 50 0 (PI * 2) # Counter Clockwise Arc
 move 110 75
 arc 75 75 35 0 PI
 move 65 65
-ctarc 60 65 5 0 (PI*2)
+ctarc 60 65 5 0 (PI * 2)
 move 95 65
-ctarc 90 65 5 0 (PI*2)
+ctarc 90 65 5 0 (PI * 2)

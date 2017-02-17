@@ -31,6 +31,16 @@ const reg_exps = {
 	'after_sym': /[\+\-\*\/\%\s\(\)]/
 }
 
+// Colors for syntax-hi
+const colors = {
+	'paren': '\x1b[36m',
+	'number': '\x1b[33m',
+	'identifier': '\x1b[34m',
+	'operator': '\x1b[35m',
+	'comment': '\x1b[32m',
+	'reset': '\x1b[0m'
+}
+
 function info(msg, method) {
 	console[method || 'log'](`[${(info.caller && info.caller.name) || '<anonymous>'}] ${msg}`)
 }
@@ -176,13 +186,20 @@ function parser(tokenss, inline) {
 	return ast
 }
 function run(ast) {
-	var path = (typeof window !== 'undefined') ? new Path2D() : null;
-	if (!path) throw new TypeError('Nodejs is unsupported for now!');
+	var path = (typeof window !== 'undefined') && (typeof Path2D === 'function') && new Path2D();
+	if (!path) path = {
+		__noPath2D: true,
+		source: [],
+		moveTo: (x, y) => {path.source.push('ctx.moveTo('+x+','+y+');')},
+		lineTo: (x, y) => {path.source.push('ctx.lineTo('+x+','+y+');')},
+		arc: (x, y, r, sa, ea, ac) => {path.source.push('ctx.arc('+x+','+y+','+r+','+sa+','+ea+','+ac+');')},
+		compile: () => {return Function('ctx',path.source.join('\n'))}
+	};
 	
 	function singleRun(node) {
 		if (node.type === 'program') {
 			node.body.forEach(singleRun)
-			return path
+			return path.__noPath2D ? path.compile() : path
 		} else if (node.type === 'identifier') {
 			if (!(node.name in ops)) {
 				throw new TypeError('No opcode for ['+node.name+'] !')
@@ -226,12 +243,72 @@ function open(filename) {
 	return parsepath(data)
 }
 
+// For syntax highlightning purpose; no syntax checks
+function tokenize_els(data) {
+	var tokens = []
+	var pc = 0
+	while (pc < data.length) {
+		let ch = data[pc]
+		
+		if (reg_exps.whitechar.test(ch)) {
+			pc++
+			continue
+		} else if (ch === '#') {
+			tokens.push({ type: 'comment', start: pc, length: data.length-pc})
+			break
+		} else if (reg_exps.id_start.test(ch)) {
+			let start = pc
+			let len = 0
+			while (ch && reg_exps.id.test(ch)) {
+				len++
+				ch = data[++pc]
+			}
+			tokens.push({ type: 'identifier', start: start, length: len })
+		} else if (reg_exps.digit.test(ch)) {
+			let start = pc
+			let len = 0
+			while (ch && reg_exps.digit.test(ch)) {
+				len++
+				ch = data[++pc]
+			}
+			tokens.push({ type: 'number', start: start, length: len })
+		} else if (ch === '(' || ch === ')') {
+			tokens.push({ type: 'paren', start: pc++, length: 1 })
+		} else if (reg_exps.op.test(ch)) {
+			tokens.push({ type: 'operator', start: pc++, length: 1 })
+		} else pc++
+	}
+	return tokens
+}
+
+// Highlight syntax
+function format(data) {
+	var lines = data.split('\n')
+	var tokens = lines.map(l=>tokenize_els(l))
+	var list = data.split('')
+	var offset = 0
+	tokens.forEach((tks,i) => {
+		tks.forEach(tk => {
+			var start = tk.start + offset
+			var end = start + tk.length - 1
+			var color = colors[tk.type]
+			list[start] = color + list[start]
+			list[end] += colors.reset
+		})
+		offset += lines[i].length + 1
+	})
+	return list.join('')
+}
+
 parsepath.tokenizer = tokenizer
 parsepath.parser = parser
 parsepath.run = run
 
+parsepath.tokenize_els = tokenize_els
+
 if (typeof module !== 'undefined') {
 	parsepath.open = open
+	parsepath.format = format
 	module.exports = parsepath
 } else if (typeof window !== 'undefined') {
 	window.Path2DParser = parsepath // Open method is only for nodejs module

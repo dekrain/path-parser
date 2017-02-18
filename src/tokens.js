@@ -1,7 +1,9 @@
 // This is token-based version for this parser. Later, this'll be main version of parser.
 
 (() => {
-	
+
+const isNode = typeof module === 'object'
+
 const ops = {
 	'move': (path, args) => {path.moveTo(args[0], args[1])},
 	'line': (path, args) => {path.lineTo(args[0], args[1])},
@@ -11,13 +13,20 @@ const ops = {
 	'degress': () => Math.PI / 180
 }
 
+function make_err(msg, line, col) {
+	var err = new SyntaxError(msg)
+	err.line = line
+	err.col = col
+	return err
+}
+
 // Errors
 const errs = {
-	'inv-char': (line, col, ch) => new SyntaxError('Invalid character at: '+line+':'+col+' ['+ch+']'),
-	'miss-exp-open': () => new SyntaxError('Missing open bracket!'),
-	'miss-exp-close': () => new SyntaxError('Missing close bracket!'),
-	'miss-cmd': (line, col) => new SyntaxError('Missing command literal at: '+line+':'+col),
-	'multi-pts': (line, col) => new SyntaxError('Multiple points at: '+line+':'+col)
+	'inv-char': (line, col, ch) => make_err('Invalid character at: '+line+':'+col+' ['+ch+']', line, col),
+	'miss-exp-open': (line, col) => make_err('Missing open bracket!', line, col),
+	'miss-exp-close': (line, col) => make_err('Missing close bracket!', line, col),
+	'miss-cmd': (line, col) => make_err('Missing command literal at: '+line+':'+col, line, col),
+	'multi-pts': (line, col) => make_err('Multiple points at: '+line+':'+col, line, col)
 }
 
 // Regular expressions
@@ -77,7 +86,7 @@ function tokenizer(data, line) {
 			while (ch && reg_exps.digit.test(ch)) {
 				if (ch === '.') {
 					if (point) {
-						throw errs['multi-points'](line, pc)
+						throw errs['multi-pts'](line, pc)
 					} else {
 						point = true
 					}
@@ -95,7 +104,7 @@ function tokenizer(data, line) {
 			} else {
 				level--
 				if (level < 0) {
-					throw errs['miss-exp-open']()
+					throw errs['miss-exp-open'](line, pc)
 				}
 			}
 			tokens.push({ type: 'paren', value: ch })
@@ -108,7 +117,7 @@ function tokenizer(data, line) {
 		}
 	}
 	if (level > 0) {
-		throw errs['miss-exp-close']()
+		throw errs['miss-exp-close'](line, pc)
 	}
 	return tokens
 }
@@ -234,7 +243,13 @@ function parsepath(data, more) {
 		data.split('\n').forEach((d,l)=>{tokens.push(tokenizer(d,l+1))}) // Tokenize code
 		ast = parser(tokens) // Parse tokens to get AST
 		result = run(ast) // Run formatted code
-	} catch(e) { console.error(e) }
+	} catch(e) {
+		if (isNode && e instanceof SyntaxError) {
+			var code = format(data.split('\n').map((l,i)=>(i+1).toString()+' '+l).slice(Math.max(0, e.line-2), e.line).join('\n'))
+			var ptr = ' '.repeat(e.line.toString().length + e.col + 1) + '^'
+			console.error('%s%s\n%s\n%s', (e.line > 2) ? '...\n' : '', code, ptr, e.constructor.name + ': ' + e.message)
+		} else console.error(e)
+	}
 	return more ? {tokens: tokens, ast: ast, result: result} : result
 }
 
@@ -243,7 +258,7 @@ function open(filename) {
 	return parsepath(data)
 }
 
-// For syntax highlightning purpose; no syntax checks
+// For syntax highlighting purpose; no syntax checks
 function tokenize_els(data) {
 	var tokens = []
 	var pc = 0
@@ -306,7 +321,7 @@ parsepath.run = run
 
 parsepath.tokenize_els = tokenize_els
 
-if (typeof module !== 'undefined') {
+if (isNode) {
 	parsepath.open = open
 	parsepath.format = format
 	module.exports = parsepath

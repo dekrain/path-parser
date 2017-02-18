@@ -2,7 +2,7 @@
   "name": "path-parser",
   "version": "1.0.0",
   "description": "A parser for HTML5 Path2D Canvas object",
-  "main": "src/main.js",
+  "main": "src/tokens.js",
   "directories": {
     "example": "examples"
   },

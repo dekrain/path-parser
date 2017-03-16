@@ -37,6 +37,9 @@ ctx.stroke(path);
 console.log(Path2DParser.format(code))
 ```
 
+Screen:
+![https://raw.githubusercontent.com/dekrain/path-parser/master/screen-node.png](https://raw.githubusercontent.com/dekrain/path-parser/master/screen-node.png)
+
 # More informations
 ```javascript
 var inf = Path2DParser(code, true);
